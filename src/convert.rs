@@ -154,7 +154,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
         .collect::<Vec<_>>()
         .join(",\n")
         .as_str();
-      s += "\n          ],";
+      s += "\n          ]";
       s
     })
     .collect::<Vec<_>>()
