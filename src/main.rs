@@ -7,15 +7,14 @@ use syn::{
 };
 
 fn main() {
-  // TODO(magurotuna): remove next line
-  //let input = read_from_stdin();
+  let input = read_from_stdin();
 
-  let input = r##"
-fn foo() -> i32 {
-    assert_lint_ok::<PreferConst>(r#"var x = 0;"#);
-    assert_lint_ok::<PreferConst>(r#"var y = 0;"#);
-}
-    "##;
+  //let input = r##"
+  //fn foo() -> i32 {
+  //assert_lint_ok::<PreferConst>(r#"var x = 0;"#);
+  //assert_lint_ok::<PreferConst>(r#"var y = 0;"#);
+  //}
+  //"##;
   let item_fn = parse_as_fn(input).unwrap();
   convert_valid_cases(item_fn);
 }
@@ -100,7 +99,8 @@ fn read_from_stdin() -> String {
   buffer
 }
 
-fn parse_as_fn(src: &str) -> SynResult<ItemFn> {
+fn parse_as_fn(src: impl AsRef<str>) -> SynResult<ItemFn> {
+  let src = src.as_ref();
   let func = syn::parse_str::<ItemFn>(src)?;
   Ok(func)
 }
