@@ -101,6 +101,17 @@ pub fn extract_tuples_from_vec_macro(mac: &Macro) -> Vec<(usize, usize)> {
   ret
 }
 
+pub fn extract_str_literals_from_vec_macro<'a>(mac: &'a Macro) -> Vec<String> {
+  let mut ret = Vec::new();
+  let tokens = mac.tokens.clone();
+  for token in tokens {
+    if let TokenTree::Literal(lit) = token {
+      ret.push(lit.to_string());
+    }
+  }
+  ret
+}
+
 pub fn extract_rule_from_turbofish(func: &Expr) -> &Ident {
   if let Expr::Path(expr_path) = func {
     let first_path_segment = expr_path.path.segments.iter().next().unwrap();

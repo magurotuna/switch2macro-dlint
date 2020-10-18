@@ -2,7 +2,8 @@
 use crate::extract::{
   extract_arg_as_lit, extract_arg_as_macro, extract_function_name, extract_int,
   extract_ints_from_vec_macro, extract_rule_from_turbofish,
-  extract_tuples_from_vec_macro, FunctionName,
+  extract_str_literals_from_vec_macro, extract_tuples_from_vec_macro,
+  FunctionName,
 };
 use quote::ToTokens;
 use std::fmt;
@@ -16,33 +17,38 @@ pub fn valid_cases(item_fn: &ItemFn) {
     if let Stmt::Semi(expr, _) = stmt {
       if let Expr::Call(expr_call) = expr {
         let args = &expr_call.args;
-        let valid_src = extract_arg_as_lit(args, 0);
 
         if rule.is_none() {
           rule = Some(extract_rule_from_turbofish(&*expr_call.func));
         }
 
-        codes.push(valid_src);
+        match extract_function_name(&*expr_call.func) {
+          FunctionName::Ok => {
+            let valid_src = extract_arg_as_lit(args, 0);
+            codes.push(valid_src.to_token_stream().to_string());
+          }
+          FunctionName::OkN => {
+            let vec_macro = extract_arg_as_macro(args, 0);
+            let strings = extract_str_literals_from_vec_macro(vec_macro);
+            codes.extend(strings);
+          }
+          _ => {}
+        }
       }
     }
   }
 
-  let codes: Vec<_> = codes
-    .into_iter()
-    .map(|c| c.to_token_stream().to_string())
-    .collect();
+  let codes = codes.join(",\n      ");
 
   let output = format!(
     r#"
-    assert_lint_ok_macro! {{
+    assert_lint_ok! {{
       {rule},
-      [
-        {codes},
-      ],
+      {codes},
     }};
 "#,
     rule = rule.unwrap().to_string(),
-    codes = codes.join(",\n      ")
+    codes = codes
   );
   println!("{}", output);
 }
@@ -64,7 +70,7 @@ impl fmt::Display for Error {
     s += &format!("              col: {},\n", self.col);
     s += &format!("              message: \"{}\",\n", self.message);
     if let Some(hint) = self.hint {
-      s += &format!("              hint: {},\n", hint);
+      s += &format!("              hint: \"{}\",\n", hint);
     }
     s += "            }";
 
@@ -72,7 +78,11 @@ impl fmt::Display for Error {
   }
 }
 
-pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
+pub fn invalid_cases(
+  item_fn: &ItemFn,
+  default_message: &'static str,
+  hint: Option<&'static str>,
+) {
   let mut rule = None;
   let mut errors: Vec<(&Lit, Vec<Error>)> = Vec::new();
 
@@ -95,7 +105,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
               line: None,
               col,
               message: default_message,
-              hint: None,
+              hint,
             };
             inner_errors.push(e);
           }
@@ -107,7 +117,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
                 line: None,
                 col,
                 message: default_message,
-                hint: None,
+                hint,
               };
               inner_errors.push(e);
             }
@@ -119,7 +129,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
               line: Some(line),
               col,
               message: default_message,
-              hint: None,
+              hint,
             };
             inner_errors.push(e);
           }
@@ -131,7 +141,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
                 line: Some(line),
                 col,
                 message: default_message,
-                hint: None,
+                hint,
               };
               inner_errors.push(e);
             }
@@ -162,7 +172,7 @@ pub fn invalid_cases(item_fn: &ItemFn, default_message: &'static str) {
 
   let output = format!(
     r#"
-    assert_lint_err_macro! {{
+    assert_lint_err! {{
       {rule},
       {error_output}
     }};

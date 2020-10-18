@@ -8,8 +8,14 @@ fn main() {
   let input = read_from_stdin();
   let item_fn = parse_as_fn(input).unwrap();
 
-  // convert::valid_cases(&item_fn);
-  convert::invalid_cases(&item_fn, "");
+  //convert::valid_cases(&item_fn);
+  convert::invalid_cases(
+    &item_fn,
+    "ts directives are not allowed without comment",
+    Some(
+      "Add an in-line comment explaining the reason for using this directive",
+    ),
+  );
 }
 
 fn read_from_stdin() -> String {
