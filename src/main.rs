@@ -1,94 +1,15 @@
-#![allow(unused)]
-use quote::ToTokens;
+mod convert;
+mod extract;
+
 use std::io::{self, Read};
-use syn::{
-  Expr, ExprCall, GenericArgument, Ident, ItemFn, Lit, LitStr, PathArguments,
-  Result as SynResult, Stmt, Type,
-};
+use syn::{ItemFn, Result as SynResult};
 
 fn main() {
   let input = read_from_stdin();
   let item_fn = parse_as_fn(input).unwrap();
-  convert_valid_cases(item_fn);
-}
 
-fn convert_valid_cases(item_fn: ItemFn) {
-  let mut rule = None;
-  let mut codes = Vec::new();
-
-  for stmt in &item_fn.block.stmts {
-    if let Stmt::Semi(expr, _) = stmt {
-      if let Expr::Call(expr_call) = expr {
-        let args = &expr_call.args;
-        let valid_src = extract_arg_as_lit(args, 0);
-
-        if rule.is_none() {
-          rule = Some(extract_rule_from_turbofish(&*expr_call.func));
-        }
-
-        codes.push(valid_src);
-      }
-    }
-  }
-
-  let codes: Vec<_> = codes
-    .into_iter()
-    .map(|c| c.to_token_stream().to_string())
-    .collect();
-
-  let output = format!(
-    r#"
-    assert_lint_ok_macro! {{
-      {rule},
-      [
-        {codes},
-      ],
-    }};
-"#,
-    rule = rule.unwrap().to_string(),
-    codes = codes.join(",\n      ")
-  );
-  println!("{}", output);
-}
-
-fn extract_arg_as_lit<'a>(
-  args: impl IntoIterator<Item = &'a Expr>,
-  index: usize,
-) -> &'a Lit {
-  args
-    .into_iter()
-    .enumerate()
-    .find_map(|(i, elem)| {
-      if i == index {
-        if let Expr::Lit(expr_lit) = elem {
-          Some(&expr_lit.lit)
-        } else {
-          None
-        }
-      } else {
-        None
-      }
-    })
-    .unwrap()
-}
-
-fn extract_rule_from_turbofish(func: &Expr) -> &Ident {
-  if let Expr::Path(expr_path) = func {
-    let first_path_segment = expr_path.path.segments.iter().next().unwrap();
-    if let PathArguments::AngleBracketed(angle_generic) =
-      &first_path_segment.arguments
-    {
-      let first_generic = angle_generic.args.iter().next().unwrap();
-      if let GenericArgument::Type(ty) = first_generic {
-        if let Type::Path(type_path) = ty {
-          let first_path_segment =
-            type_path.path.segments.iter().next().unwrap();
-          return &first_path_segment.ident;
-        }
-      }
-    }
-  }
-  unreachable!()
+  // convert::valid_cases(&item_fn);
+  convert::invalid_cases(&item_fn, "");
 }
 
 fn read_from_stdin() -> String {
