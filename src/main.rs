@@ -1,5 +1,5 @@
 #![allow(unused)]
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use std::io::{self, Read};
 use syn::{
   Expr, ExprCall, GenericArgument, Ident, ItemFn, Lit, LitStr, PathArguments,
@@ -8,13 +8,6 @@ use syn::{
 
 fn main() {
   let input = read_from_stdin();
-
-  //let input = r##"
-  //fn foo() -> i32 {
-  //assert_lint_ok::<PreferConst>(r#"var x = 0;"#);
-  //assert_lint_ok::<PreferConst>(r#"var y = 0;"#);
-  //}
-  //"##;
   let item_fn = parse_as_fn(input).unwrap();
   convert_valid_cases(item_fn);
 }
@@ -38,19 +31,24 @@ fn convert_valid_cases(item_fn: ItemFn) {
     }
   }
 
-  let output_codes = quote! {
-    [
-      #(#codes),*
-    ]
-  };
-  let rule = rule.unwrap();
-  let output = quote! {
-    assert_lint_ok_macro! {
-      #rule,
-      #output_codes
-    };
-  };
-  eprintln!("{}", output);
+  let codes: Vec<_> = codes
+    .into_iter()
+    .map(|c| c.to_token_stream().to_string())
+    .collect();
+
+  let output = format!(
+    r#"
+    assert_lint_ok_macro! {{
+      {rule},
+      [
+        {codes},
+      ],
+    }};
+"#,
+    rule = rule.unwrap().to_string(),
+    codes = codes.join(",\n      ")
+  );
+  println!("{}", output);
 }
 
 fn extract_arg_as_lit<'a>(
