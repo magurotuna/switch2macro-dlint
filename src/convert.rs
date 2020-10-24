@@ -63,16 +63,16 @@ pub struct Error {
 
 impl fmt::Display for Error {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let mut s = "            {\n".to_string();
+    let mut s = "        {\n".to_string();
     if let Some(line) = self.line {
-      s += &format!("              line: {},\n", line);
+      s += &format!("          line: {},\n", line);
     }
-    s += &format!("              col: {},\n", self.col);
-    s += &format!("              message: \"{}\",\n", self.message);
+    s += &format!("          col: {},\n", self.col);
+    s += &format!("          message: \"{}\",\n", self.message);
     if let Some(hint) = self.hint {
-      s += &format!("              hint: \"{}\",\n", hint);
+      s += &format!("          hint: \"{}\",\n", hint);
     }
-    s += "            }";
+    s += "        }";
 
     write!(f, "{}", s)
   }
@@ -134,6 +134,7 @@ pub fn invalid_cases(
             inner_errors.push(e);
           }
           FunctionName::ErrOnLineN => {
+            eprintln!("aaaaaaaaaaaaa");
             let vec_macro = extract_arg_as_macro(args, 1);
             let result = extract_tuples_from_vec_macro(vec_macro);
             for (line, col) in result {
@@ -157,14 +158,14 @@ pub fn invalid_cases(
   let error_output = errors
     .into_iter()
     .map(|(src, errors)| {
-      let mut s = format!("{}: [\n", src.to_token_stream());
+      let mut s = format!("      {}: [\n", src.to_token_stream());
       s += errors
         .into_iter()
         .map(|e| e.to_string())
         .collect::<Vec<_>>()
         .join(",\n")
         .as_str();
-      s += "\n          ]";
+      s += "\n      ]";
       s
     })
     .collect::<Vec<_>>()
@@ -174,7 +175,7 @@ pub fn invalid_cases(
     r#"
     assert_lint_err! {{
       {rule},
-      {error_output}
+{error_output}
     }};
 "#,
     rule = rule.unwrap().to_string(),
