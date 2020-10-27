@@ -1,42 +1,30 @@
-fn ban_types_invalid() {
-    assert_lint_err::<BanTypes>("let a: String;", 7);
-    assert_lint_err::<BanTypes>("let a: Object;", 7);
-    assert_lint_err::<BanTypes>("let a: Number;", 7);
-    assert_lint_err::<BanTypes>("let a: Function;", 7);
-    assert_lint_err::<BanTypes>("let a: object;", 7);
-    assert_lint_err::<BanTypes>("let a: {};", 7);
-    assert_lint_err::<BanTypes>("let a: { b: String};", 12);
-    assert_lint_err::<BanTypes>("let a: { b: Number};", 12);
-    assert_lint_err_n::<BanTypes>(
-      "let a: { b: object, c: Object};",
-      vec![12, 23],
-    );
-    assert_lint_err::<BanTypes>("let a: { b: { c : Function}};", 18);
-    assert_lint_err::<BanTypes>("let a: Array<String>", 13);
-    assert_lint_err_n::<BanTypes>("let a: Number<Function>", vec![7, 14]);
-    assert_lint_err::<BanTypes>("function foo(a: String) {}", 16);
-    assert_lint_err::<BanTypes>("function foo(): Number {}", 16);
-    assert_lint_err::<BanTypes>("let a: () => Number;", 13);
-    assert_lint_err::<BanTypes>("'a' as String;", 7);
-    assert_lint_err::<BanTypes>("1 as Number;", 5);
-    assert_lint_err_on_line_n::<BanTypes>(
-      "
-class Foo<F = String> extends Bar<String> implements Baz<Object> {
-  constructor(foo: String | Object) {}
-    
-  exit(): Array<String> {
-    const foo: String = 1 as String;
-  }
-}",
-      vec![
-        (2, 14),
-        (2, 34),
-        (2, 57),
-        (3, 19),
-        (3, 28),
-        (5, 16),
-        (6, 15),
-        (6, 29),
-      ],
+  fn for_direction_invalid() {
+    // ++, --
+    assert_lint_err::<ForDirection>("for(let i = 0; i < 2; i--) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i < 2; --i) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i <= 2; i--) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i <= 2; --i) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i > 2; i++) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i > 2; ++i) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i >= 0; i++) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i >= 0; ++i) {}", 0);
+    // +=, -=
+    assert_lint_err::<ForDirection>("for(let i = 0; i < 2; i -= 1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i <= 2; i -= 1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i > 2; i -= -1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i >= 0; i -= -1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i > 2; i += 1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 2; i >= 0; i += 1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i < 2; i += -1) {}", 0);
+    assert_lint_err::<ForDirection>("for(let i = 0; i <= 2; i += -1) {}", 0);
+    // nested
+    assert_lint_err_on_line::<ForDirection>(
+      r#"
+for (let i = 0; i < 2; i++) {
+  for (let j = 0; j < 2; j--) {}
+}
+      "#,
+      3,
+      2,
     );
   }

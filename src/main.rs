@@ -9,7 +9,7 @@ fn main() {
   let item_fn = parse_as_fn(input).unwrap();
 
   //  convert::valid_cases(&item_fn);
-  convert::invalid_cases(&item_fn, "Use `string` instead", None);
+  convert::invalid_cases(&item_fn, stringify!(MESSAGE), Some(stringify!(HINT)));
 }
 
 fn read_from_stdin() -> String {
