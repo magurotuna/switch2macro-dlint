@@ -57,8 +57,8 @@ pub fn valid_cases(item_fn: &ItemFn) {
 pub struct Error {
   pub line: Option<usize>,
   pub col: usize,
-  pub message: &'static str,
-  pub hint: Option<&'static str>,
+  pub message: String,
+  pub hint: Option<String>,
 }
 
 impl fmt::Display for Error {
@@ -69,7 +69,7 @@ impl fmt::Display for Error {
     }
     s += &format!("          col: {},\n", self.col);
     s += &format!("          message: \"{}\",\n", self.message);
-    if let Some(hint) = self.hint {
+    if let Some(ref hint) = self.hint {
       s += &format!("          hint: \"{}\",\n", hint);
     }
     s += "        }";
@@ -80,8 +80,8 @@ impl fmt::Display for Error {
 
 pub fn invalid_cases(
   item_fn: &ItemFn,
-  default_message: &'static str,
-  hint: Option<&'static str>,
+  default_message: String,
+  hint: Option<String>,
 ) {
   let mut rule = None;
   let mut errors: Vec<(&Lit, Vec<Error>)> = Vec::new();
@@ -104,8 +104,8 @@ pub fn invalid_cases(
             let e = Error {
               line: None,
               col,
-              message: default_message,
-              hint,
+              message: default_message.clone(),
+              hint: hint.clone(),
             };
             inner_errors.push(e);
           }
@@ -116,8 +116,8 @@ pub fn invalid_cases(
               let e = Error {
                 line: None,
                 col,
-                message: default_message,
-                hint,
+                message: default_message.clone(),
+                hint: hint.clone(),
               };
               inner_errors.push(e);
             }
@@ -128,8 +128,8 @@ pub fn invalid_cases(
             let e = Error {
               line: Some(line),
               col,
-              message: default_message,
-              hint,
+              message: default_message.clone(),
+              hint: hint.clone(),
             };
             inner_errors.push(e);
           }
@@ -141,8 +141,8 @@ pub fn invalid_cases(
               let e = Error {
                 line: Some(line),
                 col,
-                message: default_message,
-                hint,
+                message: default_message.clone(),
+                hint: hint.clone(),
               };
               inner_errors.push(e);
             }
