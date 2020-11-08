@@ -68,9 +68,9 @@ impl fmt::Display for Error {
       s += &format!("          line: {},\n", line);
     }
     s += &format!("          col: {},\n", self.col);
-    s += &format!("          message: \"{}\",\n", self.message);
+    s += &format!("          message: {},\n", self.message);
     if let Some(ref hint) = self.hint {
-      s += &format!("          hint: \"{}\",\n", hint);
+      s += &format!("          hint: {},\n", hint);
     }
     s += "        }";
 
